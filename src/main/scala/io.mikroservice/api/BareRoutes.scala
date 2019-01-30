@@ -36,6 +36,13 @@ class BareRoutes(bearService: BareService)(implicit ec: ExecutionContext, system
             onSuccess(result)(r => complete(Accepted, r))
           }
         }
+      } ~ path("userRepositories") {
+        get {
+          entity(as[Requests.GetUserRepositories]) { requests =>
+            val result = bearService.getUserRepositories(requests.user,requests.`type`,requests.sort,requests.direction)
+            onSuccess(result)(r => complete(Accepted, r))
+          }
+        }
       } ~ path("refund") {
         post {
           complete(NotImplemented)

@@ -14,6 +14,7 @@ import io.codeheroes.akka.http.lb.EndpointEvent
 import io.mikroservice.api.BareRoutes
 import io.mikroservice.domain.BareService
 import io.mikroservice.infrastructure.RESTExtService
+import io.mikroservice.infrastructure.githubService.RESTGithubService
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
@@ -44,9 +45,10 @@ class Application(config: Config, servicesConfig: ServicesConfig) extends Strict
   } else logger.info(s"Not using proxy for my service")
 
   private val extService = new RESTExtService(servicesConfig.extService)
+  private val githubService = new RESTGithubService();
 
 
-  private val bareService = new BareService(extService)
+  private val bareService = new BareService(extService,githubService);
 
   val bareRoutes = new BareRoutes(bareService).routing
 
