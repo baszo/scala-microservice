@@ -14,5 +14,8 @@ object Requests {
                                         sort: Option[String] ,
                                         direction: Option[String]
                                       )
+  final case class GetUser(
+                                        username: String
+                                      )
 
 }

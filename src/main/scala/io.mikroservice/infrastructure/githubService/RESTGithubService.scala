@@ -10,7 +10,7 @@ import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
 import io.mikroservice.domain.service.GithubService
 import io.mikroservice.infrastructure.core.JsonParsing
-import io.mikroservice.infrastructure.v3.{GetUserRepositories, GithubRepository}
+import io.mikroservice.infrastructure.v3.{GetUserRepositories, GithubRepository, GithubRequest}
 import org.json4s.native.Serialization
 
 import scala.concurrent.duration._
@@ -60,6 +60,33 @@ class RESTGithubService (implicit system: ActorSystem, ec: ExecutionContext, mat
           fromJson[Seq[GithubRepository]](entity).map(Left(_))
         case (Created, entity) =>
           fromJson[Seq[GithubRepository]](entity).map(Left(_))
+        case (other, entity) =>
+          throw new IllegalStateException(s"Unhandled status $other for request $request with response $entity")
+      }
+
+  }
+
+  def get[T: Manifest](request: GithubRequest): Future[Either[T, HttpResponse]] =
+    breaker.withCircuitBreaker(_get(request))
+
+  private def _get[T: Manifest](get: GithubRequest): Future[Either[T, HttpResponse]] = {
+
+    val url = Uri.from(scheme = "https",host = "api.github.com",path = get.getUrlPath,queryString = get.getQueryParams)
+
+
+    val request = HttpRequest(
+      method = HttpMethods.GET,
+      uri = url,
+    )
+
+    client
+      .singleRequest(request, settings = proxySettings)
+      .map(response => (response.status, response))
+      .flatMap {
+        case (OK, entity) =>
+          fromJson[T](entity).map(Left(_))
+        case (Created, entity) =>
+          fromJson[T](entity).map(Left(_))
         case (other, entity) =>
           throw new IllegalStateException(s"Unhandled status $other for request $request with response $entity")
       }

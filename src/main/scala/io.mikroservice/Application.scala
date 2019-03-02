@@ -37,12 +37,12 @@ class Application(config: Config, servicesConfig: ServicesConfig) extends Strict
   private val apiBindHost = config.getString("application.bind-host")
   private val apiBindPort = config.getInt("application.bind-port")
 
-  private implicit var proxySettings: ConnectionPoolSettings = ConnectionPoolSettings(system)
-  if (config.hasPath("application.outgoing-proxy")) {
-      val uri = URI.create("my://"+config.getString("application.outgoing-proxy"))
-      logger.info(s"Using proxy ${uri.getHost}:${uri.getPort} for my service")
-      proxySettings = ConnectionPoolSettings(system).withTransport(ClientTransport.httpsProxy(InetSocketAddress.createUnresolved(uri.getHost, uri.getPort)))
-  } else logger.info(s"Not using proxy for my service")
+//  private implicit var proxySettings: ConnectionPoolSettings = ConnectionPoolSettings(system)
+//  if (config.hasPath("application.outgoing-proxy")) {
+//      val uri = URI.create("my://"+config.getString("application.outgoing-proxy"))
+//      logger.info(s"Using proxy ${uri.getHost}:${uri.getPort} for my service")
+//      proxySettings = ConnectionPoolSettings(system).withTransport(ClientTransport.httpsProxy(InetSocketAddress.createUnresolved(uri.getHost, uri.getPort)))
+//  } else logger.info(s"Not using proxy for my service")
 
   private val extService = new RESTExtService(servicesConfig.extService)
   private val githubService = new RESTGithubService();

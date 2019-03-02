@@ -39,7 +39,14 @@ class BareRoutes(bearService: BareService)(implicit ec: ExecutionContext, system
       } ~ path("userRepositories") {
         get {
           entity(as[Requests.GetUserRepositories]) { requests =>
-            val result = bearService.getUserRepositories(requests.user,requests.`type`,requests.sort,requests.direction)
+            val result = bearService.getUserRepositories(requests.user, requests.`type`, requests.sort, requests.direction)
+            onSuccess(result)(r => complete(Accepted, r))
+          }
+        }
+      } ~ path("user") {
+        get {
+          entity(as[Requests.GetUser]) { requests =>
+            val result = bearService.getSingleUser(requests.username)
             onSuccess(result)(r => complete(Accepted, r))
           }
         }
