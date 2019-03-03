@@ -6,15 +6,16 @@ import io.mikroservice.core.BareEventpec
 class BareSpec extends BareEventpec {
 
 
-  "Some Service" should "be OK when correct data comes " in {
+  "Github Service" should "be OK when ask for existing user " in {
     val requestData = Map(
-      "name" -> "test"
+      "username" -> "baszo"
     )
-    PostRequest("/create", requestData) ~> endpoint ~> check {
+    GetRequest("/user", requestData) ~> endpoint ~> check {
       status shouldBe Accepted
       val json = responseAsJson
-      (json \ "data").extractOpt[String] shouldBe Some("324971")
+      (json \ "login").extractOpt[String] shouldBe Some("baszo")
     }
   }
+
 
 }

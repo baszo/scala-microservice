@@ -35,6 +35,11 @@ trait TestHelpers extends FlatSpec with ScalatestRouteTest with Json4sSupport {
 
   object GetRequest {
     def apply(uri: String) = HttpRequest(method = HttpMethods.GET, uri = uri)
+
+    def apply(uri: String, body: AnyRef) = HttpRequest(
+      method = HttpMethods.GET,
+      uri = uri,
+      entity = HttpEntity(ContentTypes.`application/json`, write(body)))
   }
 
   object PostRequest {
