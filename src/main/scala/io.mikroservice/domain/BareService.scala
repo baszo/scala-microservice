@@ -12,18 +12,13 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 
 
-class BareService(extService: ExtService, githubService: GithubService)(implicit ec: ExecutionContext) extends StrictLogging {
-
-
-  def initialize(someId: SomeId): Future[Option[SomeResult]] = {
-    extService.find(someId)
-  }
+class BareService(githubService: GithubService)(implicit ec: ExecutionContext) extends StrictLogging {
 
   def getUserRepositories(user: String, `type`: Option[String] = None, sort: Option[String] = None, direction: Option[String] = None) = {
     githubService.getUserRepos(user, `type`, sort, direction)
   }
 
-  def getSingleUser(username: String): Future[Either[GithubUser, HttpResponse]] = {
+  def getSingleUser(username: String): Future[Either[Option[GithubUser], HttpResponse]] = {
     githubService.get[GithubUser](GetSingleUser(username))
   }
 

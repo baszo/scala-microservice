@@ -29,14 +29,7 @@ class BareRoutes(bearService: BareService)(implicit ec: ExecutionContext, system
 
   val routing: Route =
     handleExceptions(exceptionHandler) {
-      path("create") {
-        post {
-          entity(as[Requests.CreateRequest]) { requests =>
-            val result = bearService.initialize(SomeId(requests.name))
-            onSuccess(result)(r => complete(Accepted, r))
-          }
-        }
-      } ~ path("userRepositories") {
+       path("userRepositories") {
         get {
           entity(as[Requests.GetUserRepositories]) { requests =>
             val result = bearService.getUserRepositories(requests.user, requests.`type`, requests.sort, requests.direction)
@@ -47,7 +40,11 @@ class BareRoutes(bearService: BareService)(implicit ec: ExecutionContext, system
         get {
           entity(as[Requests.GetUser]) { requests =>
             val result = bearService.getSingleUser(requests.username)
-            onSuccess(result)(r => complete(Accepted, r))
+            onSuccess(result){
+              case Left(Some(result)) => complete(OK, result)
+              case Left(None) => complete(NotFound)
+              case Right(errors) => complete(errors)
+            }
           }
         }
       } ~ path("refund") {

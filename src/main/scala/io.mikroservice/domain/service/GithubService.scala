@@ -13,5 +13,5 @@ trait GithubService {
 
   def getUserRepos(user: String, `type`: Option[String], sort: Option[String], direction: Option[String]): Future[Either[Seq[GithubRepository], HttpResponse]]
 
-  def get[T: Manifest](request: GithubRequest): Future[Either[T,HttpResponse]]
+  def get[T: Manifest](request: GithubRequest): Future[Either[Option[T],HttpResponse]]
 }

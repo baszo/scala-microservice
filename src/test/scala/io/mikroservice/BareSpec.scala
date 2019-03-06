@@ -11,9 +11,18 @@ class BareSpec extends BareEventpec {
       "username" -> "baszo"
     )
     GetRequest("/user", requestData) ~> endpoint ~> check {
-      status shouldBe Accepted
+      status shouldBe OK
       val json = responseAsJson
       (json \ "login").extractOpt[String] shouldBe Some("baszo")
+    }
+  }
+
+  it should "return 404 when no user found" in {
+    val requestData = Map(
+      "username" -> "hzJS5mdIFkctEnww"
+    )
+    GetRequest("/user", requestData) ~> endpoint ~> check {
+      status shouldBe NotFound
     }
   }
 

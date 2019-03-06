@@ -8,6 +8,7 @@ import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.pattern.CircuitBreaker
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
+import io.mikroservice.domain.config.GithubConfigProvider
 import io.mikroservice.domain.service.GithubService
 import io.mikroservice.infrastructure.core.JsonParsing
 import io.mikroservice.infrastructure.v3.{GetUserRepositories, GithubRepository, GithubRequest}
@@ -27,7 +28,7 @@ object GithubService {
 
 }
 
-class RESTGithubService (implicit system: ActorSystem, ec: ExecutionContext, mat: ActorMaterializer, scheduler: Scheduler, proxySettings: ConnectionPoolSettings)
+class RESTGithubService(config: GithubConfigProvider)(implicit system: ActorSystem, ec: ExecutionContext, mat: ActorMaterializer, scheduler: Scheduler, proxySettings: ConnectionPoolSettings)
   extends GithubService with StrictLogging with JsonParsing {
 
   private val client = Http()
@@ -40,11 +41,11 @@ class RESTGithubService (implicit system: ActorSystem, ec: ExecutionContext, mat
 
 
   override def getUserRepos(user: String, `type`: Option[String], sort: Option[String], direction: Option[String]): Future[Either[Seq[GithubRepository], HttpResponse]] =
-    breaker.withCircuitBreaker(_getUserRepos(GetUserRepositories(user,`type`,sort,direction)))
+    breaker.withCircuitBreaker(_getUserRepos(GetUserRepositories(user, `type`, sort, direction)))
 
   private def _getUserRepos(get: GetUserRepositories): Future[Either[Seq[GithubRepository], HttpResponse]] = {
 
-    val url = Uri.from(scheme = "https",host = "api.github.com",path = get.getUrlPath,queryString = get.getQueryParams)
+    val url = Uri.from(scheme = "https", host = config.getConfig.productionUrl, path = get.getUrlPath, queryString = get.getQueryParams)
 
 
     val request = HttpRequest(
@@ -66,12 +67,13 @@ class RESTGithubService (implicit system: ActorSystem, ec: ExecutionContext, mat
 
   }
 
-  def get[T: Manifest](request: GithubRequest): Future[Either[T, HttpResponse]] =
+  def get[T: Manifest](request: GithubRequest): Future[Either[Option[T], HttpResponse]] =
     breaker.withCircuitBreaker(_get(request))
 
-  private def _get[T: Manifest](get: GithubRequest): Future[Either[T, HttpResponse]] = {
+  private def _get[T: Manifest](get: GithubRequest): Future[Either[Option[T], HttpResponse]] = {
 
-    val url = Uri.from(scheme = "https",host = "api.github.com",path = get.getUrlPath,queryString = get.getQueryParams)
+    var url = Uri.from(scheme = "http", host = config.getConfig.productionUrl, path = get.getUrlPath, queryString = get.getQueryParams)
+    config.getConfig.port.map(port => url = url.withPort(port))
 
 
     val request = HttpRequest(
@@ -84,9 +86,11 @@ class RESTGithubService (implicit system: ActorSystem, ec: ExecutionContext, mat
       .map(response => (response.status, response))
       .flatMap {
         case (OK, entity) =>
-          fromJson[T](entity).map(Left(_))
+          fromJson[T](entity).map(r => Left(Some(r)))
         case (Created, entity) =>
-          fromJson[T](entity).map(Left(_))
+          fromJson[T](entity).map(r => Left(Some(r)))
+        case (NotFound, _) =>
+          Future.successful(None).map(Left(_))
         case (other, entity) =>
           throw new IllegalStateException(s"Unhandled status $other for request $request with response $entity")
       }

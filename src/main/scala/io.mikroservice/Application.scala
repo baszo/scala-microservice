@@ -13,6 +13,7 @@ import com.typesafe.scalalogging.StrictLogging
 import io.codeheroes.akka.http.lb.EndpointEvent
 import io.mikroservice.api.BareRoutes
 import io.mikroservice.domain.BareService
+import io.mikroservice.domain.config.GithubConfigProvider
 import io.mikroservice.infrastructure.RESTExtService
 import io.mikroservice.infrastructure.githubService.RESTGithubService
 
@@ -24,7 +25,7 @@ import scala.util.{Failure, Success}
   */
 
 case class ServicesConfig(
-                           extService: Source[EndpointEvent, NotUsed]
+                           githubService: Source[EndpointEvent, NotUsed]
                          )
 
 class Application(config: Config, servicesConfig: ServicesConfig) extends StrictLogging {
@@ -37,18 +38,19 @@ class Application(config: Config, servicesConfig: ServicesConfig) extends Strict
   private val apiBindHost = config.getString("application.bind-host")
   private val apiBindPort = config.getInt("application.bind-port")
 
-//  private implicit var proxySettings: ConnectionPoolSettings = ConnectionPoolSettings(system)
-//  if (config.hasPath("application.outgoing-proxy")) {
-//      val uri = URI.create("my://"+config.getString("application.outgoing-proxy"))
-//      logger.info(s"Using proxy ${uri.getHost}:${uri.getPort} for my service")
-//      proxySettings = ConnectionPoolSettings(system).withTransport(ClientTransport.httpsProxy(InetSocketAddress.createUnresolved(uri.getHost, uri.getPort)))
-//  } else logger.info(s"Not using proxy for my service")
+  //  private implicit var proxySettings: ConnectionPoolSettings = ConnectionPoolSettings(system)
+  //  if (config.hasPath("application.outgoing-proxy")) {
+  //      val uri = URI.create("my://"+config.getString("application.outgoing-proxy"))
+  //      logger.info(s"Using proxy ${uri.getHost}:${uri.getPort} for my service")
+  //      proxySettings = ConnectionPoolSettings(system).withTransport(ClientTransport.httpsProxy(InetSocketAddress.createUnresolved(uri.getHost, uri.getPort)))
+  //  } else logger.info(s"Not using proxy for my service")
 
-  private val extService = new RESTExtService(servicesConfig.extService)
-  private val githubService = new RESTGithubService();
+  //  private val extService = new RESTExtService(servicesConfig.extService)
+  private val githubConfigProvider = new GithubConfigProvider(config)
+  private val githubService = new RESTGithubService(githubConfigProvider)
 
 
-  private val bareService = new BareService(extService,githubService);
+  private val bareService = new BareService(githubService)
 
   val bareRoutes = new BareRoutes(bareService).routing
 

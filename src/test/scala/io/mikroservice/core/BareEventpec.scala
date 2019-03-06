@@ -21,6 +21,8 @@ class BareEventpec extends TestHelpers with Matchers with BeforeAndAfterAll with
   override protected def beforeAll(): Unit = {
 
     val config = ConfigFactory.load("default.conf")
+      .withValue("github.productionUrl", ConfigValueFactory.fromAnyRef(s"localhost"))
+    .withValue("github.port", ConfigValueFactory.fromAnyRef(s"$someServiceMockPort"))
     githubServiceMock.start()
 
     val servicesConfig = ServicesConfig(endpointSource(someServiceMockPort))
